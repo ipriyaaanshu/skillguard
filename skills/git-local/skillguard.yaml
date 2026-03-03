@@ -1,0 +1,124 @@
+name: git-local
+version: 1.0.0
+description: Local git operations — commit, diff, log, branch, status, blame
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/modelcontextprotocol/servers/tree/main/src/git
+
+permissions:
+  filesystem:
+    - path: "${WORKSPACE}/**"
+      access: [read, write]
+  subprocess: true
+  subprocess_allowlist:
+    - "git"
+  network: []
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+  dependencies:
+    - gitpython>=3.1.41
+
+security:
+  slsa_level: 3
+  note: "subprocess:true restricted to git binary only"
+
+actions:
+  - name: status
+    description: Get git status of the workspace repository
+    parameters:
+      repo_path:
+        type: string
+        description: Path to git repository (default: workspace root)
+    returns:
+      type: object
+      description: Repository status with staged, unstaged, and untracked files
+
+  - name: diff
+    description: Get git diff for staged or unstaged changes
+    parameters:
+      repo_path:
+        type: string
+        description: Path to git repository
+      staged:
+        type: boolean
+        description: Show staged changes (default false, shows unstaged)
+      file_path:
+        type: string
+        description: Limit diff to a specific file or directory
+    returns:
+      type: string
+      description: Unified diff output
+
+  - name: log
+    description: Get recent commit history
+    parameters:
+      repo_path:
+        type: string
+        description: Path to git repository
+      n:
+        type: integer
+        description: Number of commits to return (default 20)
+      branch:
+        type: string
+        description: Branch to show log for (default: current branch)
+    returns:
+      type: array
+      description: List of commit objects with hash, author, date, and message
+
+  - name: commit
+    description: Create a git commit with staged changes
+    parameters:
+      repo_path:
+        type: string
+        description: Path to git repository
+      message:
+        type: string
+        description: Commit message
+      files:
+        type: array
+        description: Specific files to stage and commit (stages all tracked changes if omitted)
+    returns:
+      type: object
+      description: Commit result with hash and summary
+
+  - name: branch_list
+    description: List all branches in the repository
+    parameters:
+      repo_path:
+        type: string
+        description: Path to git repository
+      all:
+        type: boolean
+        description: Include remote branches (default false)
+    returns:
+      type: array
+      description: List of branch names with current branch marked
+
+  - name: blame
+    description: Show git blame for a file
+    parameters:
+      repo_path:
+        type: string
+        description: Path to git repository
+      file_path:
+        type: string
+        description: File to blame (relative to repo root)
+    returns:
+      type: array
+      description: Line-by-line blame with commit and author info
+
+keywords:
+  - git
+  - version-control
+  - commit
+  - diff
+  - branch
+  - blame
+  - vcs

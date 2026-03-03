@@ -3,8 +3,9 @@
 **Chainguard for AI Agent Skills** — Secure, signed, and verified skills for any agent framework.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11+-green.svg)](https://python.org)
+[![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://rust-lang.org)
 [![Security](https://img.shields.io/badge/security-first-red.svg)](#security)
+[![Skills](https://img.shields.io/badge/skills-15-brightgreen.svg)](#official-skills-catalog)
 
 ---
 
@@ -39,7 +40,7 @@ Meanwhile, skills are **fragmented** across frameworks (OpenClaw, LangChain, Cre
 │  │  • Daily rebuilds from source                   │            │
 │  │  • Automated CVE patching                       │            │
 │  │  • Dependency graph analysis                    │            │
-│  │  • Runtime behavior monitoring                  │            │
+│  │  • Runtime behavior monitoring (WASI sandbox)   │            │
 │  └─────────────────────────────────────────────────┘            │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -47,7 +48,7 @@ Meanwhile, skills are **fragmented** across frameworks (OpenClaw, LangChain, Cre
 ## Core Principles
 
 ### 1. **Secure by Default**
-- Skills run in capability-based sandboxes
+- Skills run in Wasmtime WASI capability-based sandboxes
 - Explicit permission manifests (like Android/iOS)
 - No network/filesystem access unless declared and approved
 
@@ -70,51 +71,64 @@ Meanwhile, skills are **fragmented** across frameworks (OpenClaw, LangChain, Cre
 
 ## Architecture
 
+The core runtime is implemented in **Rust** with Wasmtime for WASI sandboxing:
+
 ```
 skillguard/
-├── sdk/                    # Skill Development Kit
-│   ├── manifest.py         # Permission manifest schema
-│   ├── sandbox.py          # Capability-based sandbox runtime
-│   ├── adapters/           # Framework adapters
-│   │   ├── openclaw.py
-│   │   ├── langchain.py
-│   │   ├── crewai.py
-│   │   └── mcp.py
-│   └── testing.py          # Local testing harness
+├── rust/                   # Core Rust implementation
+│   └── crates/
+│       ├── skillguard-core/      # Manifest parsing, skill types
+│       ├── skillguard-sandbox/   # Wasmtime WASI sandbox runtime
+│       ├── skillguard-signing/   # Sigstore integration
+│       ├── skillguard-registry/  # Skill registry and resolution
+│       └── skillguard-cli/       # Command-line interface
 │
-├── factory/                # Build Factory
-│   ├── builder.py          # Isolated build environment
-│   ├── scanner.py          # Static analysis + CVE scanning
-│   ├── signer.py           # Sigstore integration
-│   └── provenance.py       # SLSA provenance generation
-│
-├── registry/               # Skill Registry
-│   ├── index.py            # Signed skill index
-│   ├── resolver.py         # Dependency resolution (SAT-based)
-│   └── mirror.py           # Decentralized mirroring
-│
-├── cli/                    # Command Line Interface
-│   ├── main.py             # Entry point
-│   ├── commands/
-│   │   ├── init.py         # skillguard init
-│   │   ├── build.py        # skillguard build
-│   │   ├── verify.py       # skillguard verify
-│   │   ├── install.py      # skillguard install
-│   │   ├── publish.py      # skillguard publish
-│   │   └── audit.py        # skillguard audit
-│   └── ui.py               # Rich terminal UI
-│
-├── runtime/                # Secure Runtime
-│   ├── executor.py         # Sandboxed skill execution
-│   ├── monitor.py          # Runtime behavior monitoring
-│   └── policy.py           # Policy enforcement engine
-│
-└── skills/                 # Official Verified Skills
-    ├── file-ops/
-    ├── web-fetch/
-    ├── github-ops/
-    └── ...
+└── skills/                 # Official Verified Skills (15 total)
+    ├── file-ops/           # ✅ Secure file operations
+    ├── web-fetch/          # ✅ HTTP fetch and text extraction
+    ├── github-mcp/         # ✅ GitHub API (repos, issues, PRs, search)
+    ├── brave-search/       # ✅ Privacy-first web and news search
+    ├── e2b-sandbox/        # ✅ Cloud code execution (Python/JS/Shell)
+    ├── playwright-browser/ # ✅ Real browser automation
+    ├── postgres-mcp/       # ✅ PostgreSQL database access
+    ├── context7-docs/      # ✅ Live library documentation fetcher
+    ├── git-local/          # ✅ Local git operations
+    ├── firecrawl-scraper/  # ✅ Web-to-Markdown conversion
+    ├── docker-mcp/         # ✅ Docker container management
+    ├── memory-graph/       # ✅ Persistent knowledge graph memory
+    ├── sqlite-mcp/         # ✅ Local SQLite database
+    ├── slack-mcp/          # ✅ Slack workspace integration
+    └── sentry-errors/      # ✅ Sentry error monitoring
 ```
+
+---
+
+## Official Skills Catalog
+
+### Tier 1 — Essential (every coding agent needs these)
+
+| Skill | Description | Permissions | Upstream |
+|-------|-------------|-------------|----------|
+| `file-ops` | Secure file read/write/search in workspace | filesystem:workspace | — |
+| `web-fetch` | HTTP fetch, JSON, and text extraction | network:\* GET | — |
+| `github-mcp` | Repos, issues, PRs, code search via GitHub API | network:api.github.com | [github/github-mcp-server](https://github.com/github/github-mcp-server) |
+| `brave-search` | Privacy-first web and news search | network:api.search.brave.com | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search) |
+| `e2b-sandbox` | Safe cloud code execution (Python/JS/Shell) in microVMs | network:api.e2b.dev | [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server) |
+| `playwright-browser` | Real browser automation via Chromium | network:\*, subprocess:chromium | [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) |
+| `postgres-mcp` | PostgreSQL queries and schema inspection | network:TCP to DB host | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/postgres) |
+| `context7-docs` | Fetch current library docs to prevent hallucinated APIs | network:context7.com | [upstash/context7](https://github.com/upstash/context7) |
+| `git-local` | Local git operations (status, diff, log, commit, blame) | filesystem:workspace, subprocess:git | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/git) |
+
+### Tier 2 — High Value (professional and team workflows)
+
+| Skill | Description | Permissions | Upstream |
+|-------|-------------|-------------|----------|
+| `firecrawl-scraper` | Convert any URL to LLM-ready Markdown; crawl and extract | network:api.firecrawl.dev | [mendableai/firecrawl-mcp-server](https://github.com/mendableai/firecrawl-mcp-server) |
+| `docker-mcp` | Container management — list, run, stop, logs, inspect | filesystem:/var/run/docker.sock, subprocess:docker | [docker/mcp-server](https://github.com/docker/mcp-server) |
+| `memory-graph` | Persistent knowledge graph memory across agent sessions | filesystem:workspace/.skillguard/memory | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/memory) |
+| `sqlite-mcp` | Local SQLite database for prototyping and agent storage | filesystem:workspace | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite) |
+| `slack-mcp` | Read/post Slack messages, search workspace history | network:slack.com, api.slack.com | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/slack) |
+| `sentry-errors` | Full stack traces, breadcrumbs, and issue management | network:sentry.io | [mcp.sentry.dev](https://mcp.sentry.dev) |
 
 ---
 
@@ -124,44 +138,40 @@ Every skill declares its permissions explicitly:
 
 ```yaml
 # skillguard.yaml
-name: github-ops
+name: github-mcp
 version: 1.0.0
 description: GitHub operations for AI agents
 author: skillguard-official
 license: Apache-2.0
+upstream: https://github.com/github/github-mcp-server
 
 # Explicit capability declarations
 permissions:
   network:
     - domain: "api.github.com"
       methods: [GET, POST, PATCH]
-    - domain: "github.com"
-      methods: [GET]
-  filesystem:
-    - path: "${WORKSPACE}/**"
-      access: [read, write]
+      ports: [443]
+  filesystem: []
+  subprocess: false
   environment:
     - name: "GITHUB_TOKEN"
       required: true
       sensitive: true
-  subprocess: false
-  
+
 # Framework compatibility
 adapters:
-  - openclaw: ">=2.0"
-  - langchain: ">=0.3"
-  - mcp: ">=1.0"
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
 
 # Build configuration
 build:
   reproducible: true
   base: "skillguard/python:3.11-minimal"
-  
+
 # Security metadata
 security:
-  audit: "2026-03-01"
-  auditor: "skillguard-security-team"
-  slsa-level: 3
+  slsa_level: 3
 ```
 
 ---
@@ -169,8 +179,8 @@ security:
 ## CLI Usage
 
 ```bash
-# Install SkillGuard
-pip install skillguard
+# Install SkillGuard CLI (Rust binary)
+cargo install skillguard
 
 # Initialize a new skill project
 skillguard init my-skill --template=basic
@@ -179,16 +189,16 @@ skillguard init my-skill --template=basic
 skillguard build --sign
 
 # Verify a skill before installing
-skillguard verify github-ops@1.0.0
+skillguard verify github-mcp@1.0.0
 
 # Install a verified skill
-skillguard install github-ops
+skillguard install github-mcp
 
 # Audit installed skills for vulnerabilities
 skillguard audit
 
 # Run a skill in sandbox (for testing)
-skillguard run github-ops --action=list-issues --repo=owner/repo
+skillguard run github-mcp --action=list-issues --repo=owner/repo
 
 # Publish to registry (requires identity verification)
 skillguard publish --sign
@@ -200,12 +210,12 @@ skillguard publish --sign
 
 ### Permission Levels
 
-| Level | Network | Filesystem | Subprocess | Use Case |
-|-------|---------|------------|------------|----------|
-| **Minimal** | None | None | No | Pure computation |
-| **Restricted** | Allowlist only | Workspace only | No | Most skills |
-| **Standard** | Allowlist only | Workspace + temp | Allowlist | Complex skills |
-| **Privileged** | Any | Any | Yes | System tools (rare) |
+| Level | Network | Filesystem | Subprocess | Example Skills |
+|-------|---------|------------|------------|----------------|
+| **Minimal** | None | None | No | memory-graph, sqlite-mcp |
+| **Restricted** | Allowlist only | Workspace only | No | github-mcp, brave-search, postgres-mcp |
+| **Standard** | Allowlist only | Workspace + temp | Allowlist | git-local (git only), playwright-browser |
+| **Privileged** | Any | Any | Yes | docker-mcp (Docker socket + CLI) |
 
 ### Trust Hierarchy
 
@@ -228,9 +238,9 @@ skillguard publish --sign
 ### Supply Chain Security (SLSA Level 3)
 
 - **Source**: Verified git commits with signed tags
-- **Build**: Isolated, reproducible builds
-- **Provenance**: Full build attestation
-- **Distribution**: Signed artifacts with Sigstore
+- **Build**: Isolated, reproducible builds via Rust/Wasmtime
+- **Provenance**: Full build attestation via Sigstore
+- **Distribution**: Signed artifacts with cryptographic verification
 
 ---
 
@@ -241,19 +251,19 @@ SkillGuard skills work everywhere:
 ```python
 # Use with OpenClaw
 from skillguard.adapters import openclaw
-skill = openclaw.load("github-ops")
+skill = openclaw.load("github-mcp")
 
 # Use with LangChain
 from skillguard.adapters import langchain
-tool = langchain.as_tool("github-ops")
+tool = langchain.as_tool("github-mcp")
 
 # Use with CrewAI
 from skillguard.adapters import crewai
-crewai_tool = crewai.as_tool("github-ops")
+crewai_tool = crewai.as_tool("github-mcp")
 
 # Use with MCP
 from skillguard.adapters import mcp
-mcp_server = mcp.as_server("github-ops")
+mcp_server = mcp.as_server("github-mcp")
 ```
 
 ---
@@ -261,11 +271,13 @@ mcp_server = mcp.as_server("github-ops")
 ## Roadmap
 
 ### Phase 1: Foundation (Current)
-- [ ] SDK with manifest schema and sandbox runtime
-- [ ] CLI for init, build, verify, install
-- [ ] 5 official verified skills
+- [x] Rust core with Wasmtime WASI sandbox runtime
+- [x] Skill manifest schema (`skillguard.yaml`)
+- [x] 15 official verified skills (Tier 1 + Tier 2)
+- [x] Upstream skill migration from top MCP/ClawHub sources
+- [ ] CLI for init, build, verify, install (`skillguard-cli` — in progress)
+- [ ] Sigstore signing integration
 - [ ] OpenClaw + LangChain adapters
-- [ ] Basic Sigstore signing
 
 ### Phase 2: Registry & Distribution
 - [ ] Decentralized registry (Git-based)
@@ -283,7 +295,7 @@ mcp_server = mcp.as_server("github-ops")
 - [ ] Web UI for browsing skills
 - [ ] Publisher verification program
 - [ ] Security audit partnerships
-- [ ] Enterprise features
+- [ ] Enterprise features (SSO, private registries)
 
 ---
 
@@ -295,9 +307,10 @@ mcp_server = mcp.as_server("github-ops")
 | Cryptographic signing | ❌ | ❌ | ❌ | ✅ |
 | Reproducible builds | ❌ | ❌ | ❌ | ✅ |
 | Permission manifests | Basic | ❌ | ✅ | ✅ |
-| Capability sandbox | ❌ | ❌ | ✅ | ✅ |
+| Capability sandbox | ❌ | ❌ | ✅ | ✅ (WASI) |
 | Continuous rebuilds | ❌ | ❌ | ❌ | ✅ |
 | SLSA compliance | ❌ | ❌ | ❌ | ✅ |
+| Official skill catalog | ✅ | ✅ | ❌ | ✅ (15 skills) |
 | Production ready | ✅ | ✅ | ❌ | 🚧 |
 
 ---
@@ -313,15 +326,22 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 git clone https://github.com/skillguard/skillguard.git
 cd skillguard
 
-# Install dependencies with uv
-uv sync
+# Build the Rust core
+cd rust && cargo build
 
-# Run tests
-uv run pytest
+# Run Rust tests
+cargo test
 
 # Run linting
-uv run ruff check .
+cargo clippy
 ```
+
+### Adding a New Skill
+
+1. Create `skills/<skill-name>/skillguard.yaml` with permission manifest
+2. Create `skills/<skill-name>/skill.py` implementing the `Skill` base class
+3. Create `skills/<skill-name>/__init__.py` exporting `create_skill`
+4. Submit a PR — security review is required for any new permission scopes
 
 ---
 
@@ -336,6 +356,13 @@ Apache 2.0 - See [LICENSE](LICENSE) for details.
 - [Chainguard](https://chainguard.dev) - Inspiration for supply chain security model
 - [Sigstore](https://sigstore.dev) - Cryptographic signing infrastructure
 - [SLSA](https://slsa.dev) - Supply chain security framework
+- [Wasmtime](https://wasmtime.dev) - WASI sandbox runtime
+- [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) - Reference MCP server implementations
+- [github/github-mcp-server](https://github.com/github/github-mcp-server) - GitHub official MCP server
+- [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) - Playwright browser automation
+- [mendableai/firecrawl-mcp-server](https://github.com/mendableai/firecrawl-mcp-server) - Firecrawl web scraping
+- [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server) - E2B cloud sandbox
+- [upstash/context7](https://github.com/upstash/context7) - Live documentation fetching
 - [Agent Skills](https://agentskills.io) - Skill format inspiration
 - [OSSA](https://openstandardagents.org) - Agent specification work
 

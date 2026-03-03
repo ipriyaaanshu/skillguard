@@ -1,0 +1,91 @@
+name: e2b-sandbox
+version: 1.0.0
+description: Safe cloud code execution in isolated microVM sandboxes via E2B
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/e2b-dev/mcp-server
+
+permissions:
+  network:
+    - domain: "*.e2b.dev"
+      methods: [GET, POST, DELETE]
+      ports: [443]
+    - domain: "api.e2b.dev"
+      methods: [GET, POST, DELETE]
+      ports: [443]
+  filesystem: []
+  subprocess: false
+  environment:
+    - name: "E2B_API_KEY"
+      required: true
+      sensitive: true
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+  dependencies:
+    - httpx>=0.27.0
+    - e2b-code-interpreter>=0.0.10
+
+security:
+  slsa_level: 3
+
+actions:
+  - name: run_code
+    description: Execute Python code in an isolated cloud sandbox
+    parameters:
+      code:
+        type: string
+        description: Python code to execute
+      timeout:
+        type: integer
+        description: Execution timeout in seconds (default 30, max 300)
+      packages:
+        type: array
+        description: Additional pip packages to install before running
+    returns:
+      type: object
+      description: Execution result with stdout, stderr, and any output files
+
+  - name: run_shell
+    description: Execute shell commands in an isolated cloud sandbox
+    parameters:
+      command:
+        type: string
+        description: Shell command to execute
+      timeout:
+        type: integer
+        description: Execution timeout in seconds (default 30, max 300)
+    returns:
+      type: object
+      description: Command result with stdout, stderr, and exit code
+
+  - name: run_javascript
+    description: Execute JavaScript/Node.js code in an isolated cloud sandbox
+    parameters:
+      code:
+        type: string
+        description: JavaScript code to execute
+      timeout:
+        type: integer
+        description: Execution timeout in seconds (default 30, max 300)
+      packages:
+        type: array
+        description: npm packages to install before running
+    returns:
+      type: object
+      description: Execution result with stdout, stderr, and any artifacts
+
+keywords:
+  - code-execution
+  - sandbox
+  - python
+  - javascript
+  - shell
+  - e2b
+  - safe-execution

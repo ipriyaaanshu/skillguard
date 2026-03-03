@@ -1,0 +1,101 @@
+name: memory-graph
+version: 1.0.0
+description: Persistent agent memory via knowledge graph — entities, relations, and observations across sessions
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/modelcontextprotocol/servers/tree/main/src/memory
+
+permissions:
+  network: []
+  filesystem:
+    - path: "${WORKSPACE}/.skillguard/memory/**"
+      access: [read, write]
+  subprocess: false
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+
+security:
+  slsa_level: 3
+
+actions:
+  - name: create_entities
+    description: Create new entities in the knowledge graph
+    parameters:
+      entities:
+        type: array
+        description: "List of entities, each with name, type, and observations"
+    returns:
+      type: array
+      description: Created entities
+
+  - name: create_relations
+    description: Create relations between entities in the graph
+    parameters:
+      relations:
+        type: array
+        description: "List of relations, each with from, to, and relationType"
+    returns:
+      type: array
+      description: Created relations
+
+  - name: add_observations
+    description: Add new observations to existing entities
+    parameters:
+      observations:
+        type: array
+        description: "List of {entityName, contents[]} to append"
+    returns:
+      type: array
+      description: Updated entities
+
+  - name: search_nodes
+    description: Search for entities by name or observation content
+    parameters:
+      query:
+        type: string
+        description: Search query to match against entity names and observations
+    returns:
+      type: object
+      description: Matching entities and their relations
+
+  - name: open_nodes
+    description: Retrieve specific entities by name
+    parameters:
+      names:
+        type: array
+        description: List of entity names to retrieve
+    returns:
+      type: object
+      description: Entity data and relations for requested names
+
+  - name: read_graph
+    description: Read the entire knowledge graph
+    parameters: {}
+    returns:
+      type: object
+      description: All entities and relations in the graph
+
+  - name: delete_entities
+    description: Delete entities and their relations from the graph
+    parameters:
+      entity_names:
+        type: array
+        description: Names of entities to delete
+    returns:
+      type: object
+      description: Deletion result
+
+keywords:
+  - memory
+  - knowledge-graph
+  - persistence
+  - entities
+  - relations
+  - agent-memory

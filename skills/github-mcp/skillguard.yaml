@@ -1,0 +1,192 @@
+name: github-mcp
+version: 1.0.0
+description: GitHub API operations for AI agents — repos, issues, PRs, code review
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/github/github-mcp-server
+
+permissions:
+  network:
+    - domain: "api.github.com"
+      methods: [GET, POST, PUT, PATCH, DELETE]
+      ports: [443]
+    - domain: "uploads.github.com"
+      methods: [POST]
+      ports: [443]
+  filesystem: []
+  subprocess: false
+  environment:
+    - name: "GITHUB_TOKEN"
+      required: true
+      sensitive: true
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+  dependencies:
+    - httpx>=0.27.0
+
+security:
+  slsa_level: 3
+
+actions:
+  - name: list_repos
+    description: List repositories for a user or organization
+    parameters:
+      owner:
+        type: string
+        description: GitHub user or organization name
+      type:
+        type: string
+        description: "Filter: all, owner, member (default: all)"
+    returns:
+      type: array
+      description: List of repository objects
+
+  - name: get_repo
+    description: Get details about a repository
+    parameters:
+      owner:
+        type: string
+        description: Repository owner
+      repo:
+        type: string
+        description: Repository name
+    returns:
+      type: object
+      description: Repository details
+
+  - name: list_issues
+    description: List issues in a repository
+    parameters:
+      owner:
+        type: string
+        description: Repository owner
+      repo:
+        type: string
+        description: Repository name
+      state:
+        type: string
+        description: "Filter: open, closed, all (default: open)"
+      labels:
+        type: string
+        description: Comma-separated label names to filter by
+    returns:
+      type: array
+      description: List of issue objects
+
+  - name: create_issue
+    description: Create a new issue in a repository
+    parameters:
+      owner:
+        type: string
+        description: Repository owner
+      repo:
+        type: string
+        description: Repository name
+      title:
+        type: string
+        description: Issue title
+      body:
+        type: string
+        description: Issue body (Markdown supported)
+      labels:
+        type: array
+        description: Label names to apply
+    returns:
+      type: object
+      description: Created issue object
+
+  - name: list_prs
+    description: List pull requests in a repository
+    parameters:
+      owner:
+        type: string
+        description: Repository owner
+      repo:
+        type: string
+        description: Repository name
+      state:
+        type: string
+        description: "Filter: open, closed, all (default: open)"
+    returns:
+      type: array
+      description: List of pull request objects
+
+  - name: create_pr
+    description: Create a pull request
+    parameters:
+      owner:
+        type: string
+        description: Repository owner
+      repo:
+        type: string
+        description: Repository name
+      title:
+        type: string
+        description: PR title
+      body:
+        type: string
+        description: PR description (Markdown supported)
+      head:
+        type: string
+        description: Branch to merge from
+      base:
+        type: string
+        description: Branch to merge into (default: main)
+    returns:
+      type: object
+      description: Created pull request object
+
+  - name: get_file_contents
+    description: Get contents of a file from a repository
+    parameters:
+      owner:
+        type: string
+        description: Repository owner
+      repo:
+        type: string
+        description: Repository name
+      path:
+        type: string
+        description: File path within the repository
+      ref:
+        type: string
+        description: Branch, tag, or commit SHA (default: default branch)
+    returns:
+      type: object
+      description: File content and metadata
+
+  - name: search_code
+    description: Search code across GitHub repositories
+    parameters:
+      query:
+        type: string
+        description: Search query with optional qualifiers (repo:, language:, etc.)
+    returns:
+      type: array
+      description: List of code search results
+
+  - name: search_issues
+    description: Search issues and pull requests across GitHub
+    parameters:
+      query:
+        type: string
+        description: Search query with optional qualifiers
+    returns:
+      type: array
+      description: List of issue/PR search results
+
+keywords:
+  - github
+  - git
+  - repository
+  - issues
+  - pull-requests
+  - code-review
+  - vcs

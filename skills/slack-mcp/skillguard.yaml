@@ -1,0 +1,115 @@
+name: slack-mcp
+version: 1.0.0
+description: Slack workspace integration — read and post messages, manage channels, search history
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/modelcontextprotocol/servers/tree/main/src/slack
+
+permissions:
+  network:
+    - domain: "slack.com"
+      methods: [GET, POST]
+      ports: [443]
+    - domain: "api.slack.com"
+      methods: [GET, POST]
+      ports: [443]
+    - domain: "files.slack.com"
+      methods: [GET, POST]
+      ports: [443]
+  filesystem: []
+  subprocess: false
+  environment:
+    - name: "SLACK_BOT_TOKEN"
+      required: true
+      sensitive: true
+    - name: "SLACK_TEAM_ID"
+      required: false
+      sensitive: false
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+  dependencies:
+    - httpx>=0.27.0
+
+security:
+  slsa_level: 3
+
+actions:
+  - name: list_channels
+    description: List public channels in the workspace
+    parameters:
+      exclude_archived:
+        type: boolean
+        description: Exclude archived channels (default true)
+      types:
+        type: string
+        description: "Channel types: public_channel, private_channel (default: public_channel)"
+    returns:
+      type: array
+      description: List of channel objects with ID, name, topic, and member count
+
+  - name: get_channel_history
+    description: Get recent messages from a channel
+    parameters:
+      channel:
+        type: string
+        description: Channel ID or name (e.g., "C1234567" or "#general")
+      limit:
+        type: integer
+        description: Number of messages to retrieve (default 50, max 200)
+    returns:
+      type: array
+      description: List of message objects with user, text, and timestamp
+
+  - name: post_message
+    description: Post a message to a Slack channel
+    parameters:
+      channel:
+        type: string
+        description: Channel ID or name to post to
+      text:
+        type: string
+        description: Message text (supports Slack Markdown mrkdwn)
+      thread_ts:
+        type: string
+        description: Thread timestamp to reply to (optional)
+    returns:
+      type: object
+      description: Posted message with timestamp and channel
+
+  - name: search_messages
+    description: Search messages across the workspace
+    parameters:
+      query:
+        type: string
+        description: Search query with optional modifiers (in:channel, from:user, etc.)
+      count:
+        type: integer
+        description: Number of results (default 20)
+    returns:
+      type: array
+      description: Matching messages with context
+
+  - name: get_user_info
+    description: Get information about a Slack user
+    parameters:
+      user:
+        type: string
+        description: User ID (e.g., "U1234567") or email
+    returns:
+      type: object
+      description: User profile with name, email, and status
+
+keywords:
+  - slack
+  - messaging
+  - team
+  - communication
+  - notifications
+  - workflow

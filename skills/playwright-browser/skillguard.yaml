@@ -1,0 +1,110 @@
+name: playwright-browser
+version: 1.0.0
+description: Real browser automation via Playwright — navigate, click, screenshot, extract
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/microsoft/playwright-mcp
+
+permissions:
+  network:
+    - domain: "*"
+      methods: [GET, POST, PUT, DELETE, HEAD]
+      ports: [80, 443, 8080, 3000, 5173, 8000]
+  filesystem:
+    - path: "${TEMP}/playwright-**"
+      access: [read, write]
+  subprocess: true
+  subprocess_allowlist:
+    - "chromium"
+    - "chrome"
+    - "playwright"
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+  dependencies:
+    - playwright>=1.44.0
+
+security:
+  slsa_level: 3
+  note: "subprocess:true required for browser process; restricted to browser binaries only"
+
+actions:
+  - name: navigate
+    description: Navigate a browser to a URL and return page content
+    parameters:
+      url:
+        type: string
+        description: URL to navigate to
+      wait_for:
+        type: string
+        description: "Wait for: load, domcontentloaded, networkidle (default: load)"
+    returns:
+      type: object
+      description: Page title, URL, and extracted text content
+
+  - name: screenshot
+    description: Take a screenshot of a page or element
+    parameters:
+      url:
+        type: string
+        description: URL to screenshot (navigates first if provided)
+      selector:
+        type: string
+        description: CSS selector of element to screenshot (optional)
+      full_page:
+        type: boolean
+        description: Capture full scrollable page (default false)
+    returns:
+      type: object
+      description: Base64-encoded PNG screenshot
+
+  - name: click
+    description: Click an element on the current page
+    parameters:
+      selector:
+        type: string
+        description: CSS selector of element to click
+    returns:
+      type: object
+      description: Updated page state after click
+
+  - name: fill_form
+    description: Fill a form field with text
+    parameters:
+      selector:
+        type: string
+        description: CSS selector of the input element
+      value:
+        type: string
+        description: Text to fill in the field
+    returns:
+      type: object
+      description: Updated page state after fill
+
+  - name: extract_content
+    description: Extract structured content from the current page
+    parameters:
+      selector:
+        type: string
+        description: CSS selector to scope extraction (optional)
+      format:
+        type: string
+        description: "Output format: text, html, markdown (default: text)"
+    returns:
+      type: string
+      description: Extracted page content
+
+keywords:
+  - browser
+  - automation
+  - playwright
+  - screenshot
+  - scraping
+  - e2e
+  - ui-testing

@@ -1,0 +1,106 @@
+name: firecrawl-scraper
+version: 1.0.0
+description: Convert any URL into clean LLM-ready Markdown via Firecrawl — scrape, crawl, and extract
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/mendableai/firecrawl-mcp-server
+
+permissions:
+  network:
+    - domain: "api.firecrawl.dev"
+      methods: [GET, POST]
+      ports: [443]
+  filesystem: []
+  subprocess: false
+  environment:
+    - name: "FIRECRAWL_API_KEY"
+      required: true
+      sensitive: true
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+  dependencies:
+    - httpx>=0.27.0
+
+security:
+  slsa_level: 3
+
+actions:
+  - name: scrape
+    description: Scrape a single URL and return clean Markdown content
+    parameters:
+      url:
+        type: string
+        description: URL to scrape
+      include_html:
+        type: boolean
+        description: Include raw HTML in response (default false)
+      only_main_content:
+        type: boolean
+        description: Filter to main content only, removing nav/footer (default true)
+    returns:
+      type: object
+      description: Scraped content with markdown, metadata, and optional HTML
+
+  - name: crawl
+    description: Crawl a site and return Markdown from all discovered pages
+    parameters:
+      url:
+        type: string
+        description: Starting URL to crawl
+      limit:
+        type: integer
+        description: Maximum number of pages to crawl (default 10, max 100)
+      include_paths:
+        type: array
+        description: URL path patterns to include (e.g., ["/blog/*", "/docs/*"])
+      exclude_paths:
+        type: array
+        description: URL path patterns to exclude
+    returns:
+      type: array
+      description: List of scraped pages with markdown and metadata
+
+  - name: map
+    description: Discover all URLs on a website without scraping content
+    parameters:
+      url:
+        type: string
+        description: Website URL to map
+      limit:
+        type: integer
+        description: Maximum URLs to return (default 100)
+    returns:
+      type: array
+      description: List of discovered URLs
+
+  - name: extract
+    description: Extract structured data from a URL using a schema
+    parameters:
+      url:
+        type: string
+        description: URL to extract data from
+      schema:
+        type: object
+        description: JSON Schema describing the data structure to extract
+      prompt:
+        type: string
+        description: Natural language prompt to guide extraction
+    returns:
+      type: object
+      description: Extracted structured data matching the schema
+
+keywords:
+  - scraping
+  - web
+  - markdown
+  - crawl
+  - extract
+  - firecrawl
+  - llm-ready

@@ -1,0 +1,89 @@
+name: sqlite-mcp
+version: 1.0.0
+description: Lightweight local SQLite database operations for prototyping and agent data storage
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite
+
+permissions:
+  network: []
+  filesystem:
+    - path: "${WORKSPACE}/**"
+      access: [read, write]
+  subprocess: false
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+
+security:
+  slsa_level: 3
+
+actions:
+  - name: query
+    description: Execute a SQL SELECT query on a SQLite database
+    parameters:
+      db_path:
+        type: string
+        description: Path to the SQLite database file (relative to workspace)
+      sql:
+        type: string
+        description: SQL SELECT statement
+      params:
+        type: array
+        description: Query parameters for parameterized queries
+    returns:
+      type: object
+      description: Query results with columns and rows
+
+  - name: execute
+    description: Execute a SQL statement (INSERT, UPDATE, DELETE, CREATE)
+    parameters:
+      db_path:
+        type: string
+        description: Path to the SQLite database file (relative to workspace)
+      sql:
+        type: string
+        description: SQL statement to execute
+      params:
+        type: array
+        description: Statement parameters for parameterized queries
+    returns:
+      type: object
+      description: Execution result with rows affected and last row ID
+
+  - name: list_tables
+    description: List all tables in a SQLite database
+    parameters:
+      db_path:
+        type: string
+        description: Path to the SQLite database file
+    returns:
+      type: array
+      description: List of table names
+
+  - name: describe_table
+    description: Get schema of a SQLite table
+    parameters:
+      db_path:
+        type: string
+        description: Path to the SQLite database file
+      table:
+        type: string
+        description: Table name to describe
+    returns:
+      type: array
+      description: Column definitions with name, type, and constraints
+
+keywords:
+  - sqlite
+  - database
+  - sql
+  - local
+  - storage
+  - lightweight

@@ -1,0 +1,107 @@
+name: postgres-mcp
+version: 1.0.0
+description: PostgreSQL database access — query, inspect schema, and manage data
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/modelcontextprotocol/servers/tree/main/src/postgres
+
+permissions:
+  network:
+    - domain: "${POSTGRES_HOST}"
+      methods: [TCP]
+      ports: [5432]
+  filesystem: []
+  subprocess: false
+  environment:
+    - name: "DATABASE_URL"
+      required: true
+      sensitive: true
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+  dependencies:
+    - asyncpg>=0.29.0
+    - psycopg2-binary>=2.9.0
+
+security:
+  slsa_level: 3
+
+actions:
+  - name: query
+    description: Execute a SQL SELECT query and return results
+    parameters:
+      sql:
+        type: string
+        description: SQL SELECT statement to execute
+      params:
+        type: array
+        description: Query parameters for parameterized queries
+      limit:
+        type: integer
+        description: Maximum rows to return (default 100, max 1000)
+    returns:
+      type: object
+      description: Query results with columns and rows
+
+  - name: execute
+    description: Execute a SQL statement (INSERT, UPDATE, DELETE)
+    parameters:
+      sql:
+        type: string
+        description: SQL statement to execute
+      params:
+        type: array
+        description: Statement parameters for parameterized queries
+    returns:
+      type: object
+      description: Execution result with rows affected
+
+  - name: list_tables
+    description: List all tables in the database
+    parameters:
+      schema:
+        type: string
+        description: Schema name to list tables from (default: public)
+    returns:
+      type: array
+      description: List of table names with row counts
+
+  - name: describe_table
+    description: Get the schema/structure of a table
+    parameters:
+      table:
+        type: string
+        description: Table name to describe
+      schema:
+        type: string
+        description: Schema name (default: public)
+    returns:
+      type: object
+      description: Table columns, types, constraints, and indexes
+
+  - name: explain
+    description: Get the query execution plan for a SQL statement
+    parameters:
+      sql:
+        type: string
+        description: SQL query to explain
+      analyze:
+        type: boolean
+        description: Run EXPLAIN ANALYZE (actually executes the query)
+    returns:
+      type: object
+      description: Query execution plan
+
+keywords:
+  - postgresql
+  - postgres
+  - database
+  - sql
+  - query
+  - data

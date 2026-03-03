@@ -1,0 +1,127 @@
+name: docker-mcp
+version: 1.0.0
+description: Docker container management — build, run, inspect, logs, and compose
+author: skillguard-official
+license: Apache-2.0
+upstream: https://github.com/docker/mcp-server
+
+permissions:
+  network: []
+  filesystem:
+    - path: "${WORKSPACE}/**"
+      access: [read]
+    - path: "/var/run/docker.sock"
+      access: [read, write]
+  subprocess: true
+  subprocess_allowlist:
+    - "docker"
+    - "docker-compose"
+    - "docker compose"
+
+adapters:
+  openclaw: ">=2.0"
+  langchain: ">=0.3"
+  mcp: ">=1.0"
+
+build:
+  reproducible: true
+  base: "skillguard/python:3.11-minimal"
+  dependencies:
+    - docker>=7.0.0
+
+security:
+  slsa_level: 3
+  note: "Docker socket access required; subprocess restricted to docker CLI only"
+
+actions:
+  - name: list_containers
+    description: List running or all Docker containers
+    parameters:
+      all:
+        type: boolean
+        description: Include stopped containers (default false)
+      filters:
+        type: object
+        description: Filter containers by label, status, name, etc.
+    returns:
+      type: array
+      description: List of container objects with ID, name, image, status
+
+  - name: get_logs
+    description: Get logs from a container
+    parameters:
+      container:
+        type: string
+        description: Container ID or name
+      tail:
+        type: integer
+        description: Number of lines from end of logs (default 100)
+      since:
+        type: string
+        description: Show logs since timestamp or relative time (e.g., "10m")
+    returns:
+      type: string
+      description: Container log output
+
+  - name: run_container
+    description: Run a Docker container
+    parameters:
+      image:
+        type: string
+        description: Docker image to run
+      command:
+        type: string
+        description: Command to run in the container
+      environment:
+        type: object
+        description: Environment variables to set
+      ports:
+        type: object
+        description: Port mappings (host_port:container_port)
+      detach:
+        type: boolean
+        description: Run in background (default true)
+    returns:
+      type: object
+      description: Container info including ID and status
+
+  - name: stop_container
+    description: Stop a running container
+    parameters:
+      container:
+        type: string
+        description: Container ID or name
+      timeout:
+        type: integer
+        description: Seconds to wait before killing (default 10)
+    returns:
+      type: object
+      description: Stop result
+
+  - name: list_images
+    description: List Docker images
+    parameters:
+      filters:
+        type: object
+        description: Filter images by label, dangling status, etc.
+    returns:
+      type: array
+      description: List of image objects with ID, tags, size
+
+  - name: inspect_container
+    description: Get detailed information about a container
+    parameters:
+      container:
+        type: string
+        description: Container ID or name
+    returns:
+      type: object
+      description: Full container inspection data
+
+keywords:
+  - docker
+  - containers
+  - devops
+  - compose
+  - images
+  - logs
