@@ -6,7 +6,6 @@ import json
 import shutil
 import subprocess
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
 
@@ -61,10 +60,10 @@ class SkillGuardClient:
                 text=True,
                 timeout=120,
             )
-        except subprocess.TimeoutExpired:
-            raise SkillGuardError("CLI command timed out")
-        except FileNotFoundError:
-            raise SkillGuardError(f"CLI binary not found at {self._cli}")
+        except subprocess.TimeoutExpired as e:
+            raise SkillGuardError("CLI command timed out") from e
+        except FileNotFoundError as e:
+            raise SkillGuardError(f"CLI binary not found at {self._cli}") from e
 
         if result.returncode != 0:
             stderr = result.stderr.strip()

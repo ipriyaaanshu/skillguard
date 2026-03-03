@@ -118,23 +118,23 @@ pub fn audit_manifest(manifest: &SkillManifest) -> Vec<AuditIssue> {
 
     // Check for write access to sensitive paths
     for fs in &manifest.permissions.filesystem {
-        if (fs.path == "/"
+        let is_sensitive = fs.path == "/"
             || fs.path == "/**"
             || fs.path == "${HOME}/**"
-            || fs.path.starts_with("/etc"))
-            && fs
-                .access
-                .iter()
-                .any(|a| matches!(a, crate::permission::FilesystemAccess::Write))
-            {
-                issues.push(AuditIssue {
-                    severity: AuditSeverity::Critical,
-                    message: format!("Write access to sensitive path: {}", fs.path),
-                    file: None,
-                    line: None,
-                    fix_suggestion: Some("Restrict to ${WORKSPACE} or ${TEMP} directories".into()),
-                });
-            }
+            || fs.path.starts_with("/etc");
+        let has_write = fs
+            .access
+            .iter()
+            .any(|a| matches!(a, crate::permission::FilesystemAccess::Write));
+        if is_sensitive && has_write {
+            issues.push(AuditIssue {
+                severity: AuditSeverity::Critical,
+                message: format!("Write access to sensitive path: {}", fs.path),
+                file: None,
+                line: None,
+                fix_suggestion: Some("Restrict to ${WORKSPACE} or ${TEMP} directories".into()),
+            });
+        }
     }
 
     // Check SLSA level

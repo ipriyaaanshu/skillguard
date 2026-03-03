@@ -32,11 +32,11 @@ def as_tool(
     """
     try:
         from langchain_core.tools import Tool
-    except ImportError:
+    except ImportError as e:
         raise ImportError(
             "langchain-core is required for LangChain integration. "
             "Install with: pip install langchain-core"
-        )
+        ) from e
 
     tool_name = name or f"{skill}.{action}"
 
