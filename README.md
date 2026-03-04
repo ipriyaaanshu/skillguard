@@ -15,8 +15,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/ipriyaaanshu/skillguard)](https://github.com/ipriyaaanshu/skillguard/issues)
 [![Last commit](https://img.shields.io/github/last-commit/ipriyaaanshu/skillguard)](https://github.com/ipriyaaanshu/skillguard/commits)
 
-[![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=ipriyaaanshu&repo=skillguard&theme=github_dark&hide_border=true)](https://github.com/ipriyaaanshu/skillguard)
-
 </div>
 
 ---
